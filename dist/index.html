@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Untitled</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>簡易版 Google 小恐龍</title>
+    <style>
+        * { padding: 0; margin: 0; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f7f7f7;
+            font-family: Arial, sans-serif;
+        }
+        #gameCanvas {
+            border-bottom: 2px solid #535353;
+            background-color: #fff;
+        }
+        .info {
+            position: absolute;
+            top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="info">
+    <h1>按「空白鍵」跳躍</h1>
+    <p>分數: <span id="score">0</span></p>
+</div>
+<canvas id="gameCanvas" width="600" height="200"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreElement = document.getElementById("score");
+
+    // 遊戲變數
+    let score = 0;
+    let gameSpeed = 5;
+    let isGameOver = false;
+
+    // 小恐龍物件
+    const dino = {
+        x: 50,
+        y: 150,
+        width: 40,
+        height: 40,
+        color: "#535353",
+        dy: 0,         // Y 軸速度
+        jumpForce: 12, // 跳躍力度
+        gravity: 0.6,  // 重力
+        grounded: false
+    };
+
+    // 仙人掌（障礙物）
+    const cactus = {
+        x: canvas.width,
+        y: 160,
+        width: 20,
+        height: 40,
+        color: "#ff4d4d"
+    };
+
+    // 監聽按鍵
+    window.addEventListener("keydown", (e) => {
+        if (e.code === "Space" && dino.grounded) {
+            dino.dy = -dino.jumpForce;
+            dino.grounded = false;
+        }
+        if (isGameOver && e.code === "Space") {
+            resetGame();
+        }
+    });
+
+    function drawDino() {
+        ctx.fillStyle = dino.color;
+        ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+    }
+
+    function drawCactus() {
+        ctx.fillStyle = cactus.color;
+        ctx.fillRect(cactus.x, cactus.y, cactus.width, cactus.height);
+    }
+
+    function update() {
+        if (isGameOver) return;
+
+        // 處理重力與跳躍
+        dino.y += dino.dy;
+        if (dino.y + dino.height < canvas.height) {
+            dino.dy += dino.gravity;
+            dino.grounded = false;
+        } else {
+            dino.y = canvas.height - dino.height;
+            dino.dy = 0;
+            dino.grounded = true;
+        }
+
+        // 移動障礙物
+        cactus.x -= gameSpeed;
+        if (cactus.x + cactus.width < 0) {
+            cactus.x = canvas.width;
+            score++;
+            scoreElement.innerText = score;
+            // 每 5 分稍微加速
+            if (score % 5 === 0) gameSpeed += 0.5;
+        }
+
+        // 碰撞偵測
+        if (
+            dino.x < cactus.x + cactus.width &&
+            dino.x + dino.width > cactus.x &&
+            dino.y < cactus.y + cactus.height &&
+            dino.y + dino.height > cactus.y
+        ) {
+            gameOver();
+        }
+    }
+
+    function gameOver() {
+        isGameOver = true;
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.font = "30px Arial";
+        ctx.fillText("遊戲結束! 按空白鍵重啟", 140, 100);
+    }
+
+    function resetGame() {
+        score = 0;
+        scoreElement.innerText = score;
+        gameSpeed = 5;
+        cactus.x = canvas.width;
+        isGameOver = false;
+        requestAnimationFrame(gameLoop);
+    }
+
+    function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawDino();
+        drawCactus();
+        update();
+        if (!isGameOver) {
+            requestAnimationFrame(gameLoop);
+        }
+    }
+
+    gameLoop();
+</script>
+
+</body>
+</html>
+    
+  </body>
+  
+</html>
